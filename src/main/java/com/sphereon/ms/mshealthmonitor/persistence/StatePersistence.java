@@ -5,6 +5,7 @@ import com.sphereon.ms.mshealthmonitor.model.EasyBlockchainState;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -24,7 +25,7 @@ public class StatePersistence {
         this.easyBlockchainState = easyBlockchainState;
 
         try {
-            final File jarDir = new File(StatePersistence.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            final File jarDir = new File(getRunDir());
             final File stateDir = new File(jarDir, "state");
             stateDir.mkdir();
             this.stateFile = new File(stateDir, "EasyBlockchainState.json");
@@ -32,6 +33,20 @@ public class StatePersistence {
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String getRunDir() throws URISyntaxException {
+        String path = StatePersistence.class.getProtectionDomain().getCodeSource().getLocation().toURI().toString();
+        int pos = path.indexOf(".jar!");
+        if (pos > -1) {
+            path = path.substring(0, pos);
+            pos = path.lastIndexOf('/');
+            if (pos == -1) {
+                throw new RuntimeException("Can't extract directory from " + path);
+            }
+            path = path.substring(0, pos );
+        }
+        return StringUtils.replace(path, "file:/", "");
     }
 
     public void saveState() {
