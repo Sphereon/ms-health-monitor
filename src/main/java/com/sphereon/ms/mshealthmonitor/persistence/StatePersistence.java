@@ -25,8 +25,14 @@ public class StatePersistence {
         this.easyBlockchainState = easyBlockchainState;
 
         try {
-            final File jarDir = new File(getRunDir());
-            final File stateDir = new File(jarDir, "state");
+            final String envStateDir = System.getenv("STATE_DIRECTORY");
+            File stateDir;
+            if (StringUtils.isEmpty(envStateDir)) {
+                final File jarDir = new File(getRunDir());
+                stateDir = new File(jarDir, "state");
+            } else {
+                stateDir = new File(envStateDir);
+            }
             stateDir.mkdir();
             this.stateFile = new File(stateDir, "EasyBlockchainState.json");
             loadState();
@@ -44,7 +50,7 @@ public class StatePersistence {
             if (pos == -1) {
                 throw new RuntimeException("Can't extract directory from " + path);
             }
-            path = path.substring(0, pos );
+            path = path.substring(0, pos);
         }
         return StringUtils.replace(path, "file:/", "");
     }
