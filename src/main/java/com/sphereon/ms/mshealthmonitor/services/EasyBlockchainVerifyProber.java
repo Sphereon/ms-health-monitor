@@ -1,6 +1,7 @@
 package com.sphereon.ms.mshealthmonitor.services;
 
 import com.sphereon.libs.authentication.api.TokenRequest;
+import com.sphereon.ms.mshealthmonitor.config.ApiConfig;
 import com.sphereon.ms.mshealthmonitor.model.EasyBlockchainState;
 import com.sphereon.ms.mshealthmonitor.model.ServiceState;
 import com.sphereon.ms.mshealthmonitor.persistence.StatePersistence;
@@ -12,9 +13,12 @@ import com.sphereon.sdk.blockchain.easy.model.EntryData;
 import com.sphereon.sdk.blockchain.easy.model.ExternalId;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -25,12 +29,15 @@ import org.springframework.stereotype.Service;
 @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class EasyBlockchainVerifyProber {
 
+    private static Logger logger = LoggerFactory.getLogger(ApiConfig.class);
+
     public static final String CONTEXT_FACTOM = "factom";
 
     private final EasyBlockchainState easyBlockchainState;
     private final StatePersistence statePersistence;
     private final AllApi allApi;
     private final TokenRequest tokenRequester;
+    private LocalDateTime postPoneChecksUntil;
 
 
     @Autowired
@@ -46,16 +53,28 @@ public class EasyBlockchainVerifyProber {
 
     private void checkState() {
         if (StringUtils.isEmpty(easyBlockchainState.getChainId())) {
+            logger.info("No persisted chain id found, creating a new one");
             tokenRequester.execute();
             final var idResponse = allApi.createChain(new Chain().firstEntry(buildFirstEntry()), "factom");
             easyBlockchainState.setChainId(idResponse.getChain().getId());
             statePersistence.saveState();
+            logger.info("Created chain " + easyBlockchainState.getChainId());
+            postPoneChecksUntil = LocalDateTime.now().plusMinutes(14);
+            logger.info("Postponing monitor until " + postPoneChecksUntil);
+            easyBlockchainState.setServiceState(ServiceState.OUT_OF_SERVICE);
+            easyBlockchainState.setStateMessage("Waiting for chain to anchor.");
+            easyBlockchainState.setLastException(null);
+            statePersistence.saveState();
+
         }
     }
 
 
     @Scheduled(fixedRate = 60000L)
     void testVerifyShort() {
+        if (needToPostpone()) {
+            return;
+        }
         tokenRequester.execute();
         try {
             if (!chainIsAnchored()) {
@@ -110,6 +129,7 @@ public class EasyBlockchainVerifyProber {
     private void down(final Exception exception) {
         easyBlockchainState.setLastException(exception);
         down(exception.getMessage());
+        logger.error("Down state detected", exception);
     }
 
     private void upAllOk() {
@@ -157,5 +177,12 @@ public class EasyBlockchainVerifyProber {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private boolean needToPostpone() {
+        if (postPoneChecksUntil != null && LocalDateTime.now().isBefore(postPoneChecksUntil)) {
+            return true;
+        }
+        return false;
     }
 }
