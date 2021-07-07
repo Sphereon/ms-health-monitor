@@ -132,13 +132,16 @@ public class EasyBlockchainVerifyProber {
 
     private Entry buildFirstEntry() {
         try {
+            final byte[] timestamp = OffsetDateTime.now().toString().getBytes(StandardCharsets.UTF_8);
             return new Entry()
               .entryData(new EntryData()
                 .externalIds(List.of(new ExternalId()
                     .value("EasyBlockchainVerifyProber".getBytes(StandardCharsets.UTF_8)),
                   new ExternalId()
-                    .value(InetAddress.getLocalHost().getHostName().getBytes(StandardCharsets.UTF_8)))
-                ).content(OffsetDateTime.now().toString().getBytes(StandardCharsets.UTF_8)));
+                    .value(InetAddress.getLocalHost().getHostName().getBytes(StandardCharsets.UTF_8)),
+                  new ExternalId()
+                    .value(timestamp))
+                ).content(timestamp));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

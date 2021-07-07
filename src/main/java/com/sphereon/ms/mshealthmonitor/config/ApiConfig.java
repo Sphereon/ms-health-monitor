@@ -28,8 +28,8 @@ public class ApiConfig {
       String storeApplicationName) {
         ApiConfiguration tokenApiConfig = new ApiConfiguration.Builder()
           .withApplication(storeApplicationName)
-          .withPersistenceType(PersistenceType.SPRING_APPLICATION_PROPERTIES)
-          .withPersistenceMode(PersistenceMode.READ_WRITE)
+          .withPersistenceType(PersistenceType.SYSTEM_ENVIRONMENT)
+          .withPersistenceMode(PersistenceMode.READ_ONLY)
           .withAutoEncryptSecrets(true)
           .build();
         return new AuthenticationApi.Builder()
