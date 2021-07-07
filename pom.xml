@@ -16,7 +16,7 @@
 
   <properties>
     <java.version>11</java.version>
-    <authentication-lib-main.version>0.1.8-SNAPSHOT</authentication-lib-main.version>
+    <authentication-lib-main.version>0.1.8</authentication-lib-main.version>
   </properties>
 
   <repositories>
@@ -38,16 +38,6 @@
       </releases>
       <snapshots>
         <enabled>false</enabled>
-      </snapshots>
-    </repository>
-    <repository>
-      <id>sphereon-opensource-snapshots</id>
-      <url>https://nexus.qa.sphereon.com/nexus/content/groups/sphereon-opensource-releases</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
       </snapshots>
     </repository>
   </repositories>
