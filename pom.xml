@@ -47,7 +47,7 @@
     <dependency>
       <groupId>com.sphereon.sdk</groupId>
       <artifactId>easy-blockchain-sdk-rest-template</artifactId>
-      <version>0.10.2-SNAPSHOT</version>
+      <version>0.10.2</version>
     </dependency>
     <dependency>
       <groupId>com.sphereon.public</groupId>
