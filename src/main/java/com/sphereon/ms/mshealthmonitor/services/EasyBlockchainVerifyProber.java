@@ -91,6 +91,9 @@ public class EasyBlockchainVerifyProber {
 
     @Scheduled(fixedRate = 900000L)
     void testRegisterAndVerifyLong() {
+        if (needToPostpone()) {
+            return;
+        }
         tokenRequester.execute();
         try {
             if (!easyBlockchainState.isChainAnchored() && !chainIsAnchored()) {
