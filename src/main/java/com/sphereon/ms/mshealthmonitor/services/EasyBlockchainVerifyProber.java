@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,22 +33,26 @@ public class EasyBlockchainVerifyProber {
     private static Logger logger = LoggerFactory.getLogger(ApiConfig.class);
 
     public static final String CONTEXT_FACTOM = "factom";
+    private static final AtomicInteger registrationCounter = new AtomicInteger();
 
     private final EasyBlockchainState easyBlockchainState;
     private final StatePersistence statePersistence;
     private final AllApi allApi;
     private final TokenRequest tokenRequester;
+    private final ShutdownManager shutdownManager;
     private LocalDateTime postPoneChecksUntil;
-
 
     @Autowired
     public EasyBlockchainVerifyProber(final EasyBlockchainState easyBlockchainState,
       final StatePersistence statePersistence,
-      final AllApi allApi, final TokenRequest tokenRequester) {
+      final AllApi allApi,
+      final TokenRequest tokenRequester,
+      ShutdownManager shutdownManager) {
         this.easyBlockchainState = easyBlockchainState;
         this.statePersistence = statePersistence;
         this.allApi = allApi;
         this.tokenRequester = tokenRequester;
+        this.shutdownManager = shutdownManager;
         checkState();
     }
 
@@ -93,6 +98,9 @@ public class EasyBlockchainVerifyProber {
     void testRegisterAndVerifyLong() {
         if (needToPostpone()) {
             return;
+        }
+        if (registrationCounter.incrementAndGet() > 500) {
+            shutdownManager.initiateShutdown(-1);
         }
         tokenRequester.execute();
         try {
