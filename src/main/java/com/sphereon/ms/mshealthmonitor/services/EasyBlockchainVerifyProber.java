@@ -75,7 +75,7 @@ public class EasyBlockchainVerifyProber {
     }
 
 
-    @Scheduled(fixedRate = 60000L)
+    @Scheduled(fixedRate = 600000L)
     void testVerifyShort() {
         if (needToPostpone()) {
             return;
@@ -94,12 +94,12 @@ public class EasyBlockchainVerifyProber {
         }
     }
 
-    @Scheduled(fixedRate = 900000L)
+    @Scheduled(fixedRate = 1800000L)
     void testRegisterAndVerifyLong() {
         if (needToPostpone()) {
             return;
         }
-        if (registrationCounter.incrementAndGet() > 500) {
+        if (registrationCounter.incrementAndGet() > 250) {
             shutdownManager.initiateShutdown(-1);
         }
         tokenRequester.execute();
